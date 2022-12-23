@@ -1,6 +1,6 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: la_core_cltk_sm
+# 🪐 spaCy Project: la_dep_cltk_sm
 
 Code required to train spaCy-compatible sm model for Latin. Latin pipeline with POS tagger, morphologizer,  lemmatizer, and dependency parser trained on all available Latin UD treebanks, i.e. Perseus, PROIEL, ITTB,  UDante, and LLCT (see below). This project is based on the spaCy tagger_parser_ud project template with the  following modifications: 1. uses Latin language-specific spaCy module; 2. combines multiple treebanks for  train, dev, and test sets; 3. uses a custom Latin senter sentence segmenter; and 4. normalizes u/v and i/j  in lemmas as a pretraining step (beta!).
 
@@ -25,7 +25,7 @@ Commands are only re-run if their inputs have changed.
 | `train` | Train tagger/pagger on Latin UD treebanks |
 | `evaluate` | Evaluate on the test data and save the metrics |
 | `package` | Package the trained model so it can be installed |
-| `document` | Document core_cltk_sm |
+| `document` | Document dep_cltk_sm |
 | `clean` | Remove intermediate files |
 
 ### ⏭ Workflows
@@ -37,7 +37,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `evaluate` &rarr; `package` &rarr; `document` &rarr; `clean` |
+| `all` | `assets` &rarr; `preprocess` &rarr; `normalize` &rarr; `evaluate` &rarr; `package` &rarr; `document` &rarr; `clean` |
 
 ### 🗂 Assets
 
@@ -59,7 +59,7 @@ in the project directory.
 
 | Feature | Description |
 | --- | --- |
-| **Name** | `la_core_cltk_sm` |
+| **Name** | `la_dep_cltk_sm` |
 | **Version** | `0.2.0` |
 | **spaCy** | `>=3.4.2,<3.5.0` |
 | **Default Pipeline** | `senter`, `tok2vec`, `tagger`, `morphologizer`, `trainable_lemmatizer`, `parser` |

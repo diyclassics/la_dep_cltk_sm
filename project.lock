@@ -148,7 +148,7 @@ train:
 evaluate:
   cmd: python -m spacy run evaluate
   script:
-    - python -m spacy evaluate  ./training/model-best  ./corpus/test/ --output ./metrics/la_core_cltk_sm_0.2.0.json  --gpu-id
+    - python -m spacy evaluate  ./training/model-best  ./corpus/test/ --output ./metrics/la_dep_cltk_sm_0.2.0.json  --gpu-id
       -1
   deps:
     - path: training/model-best
@@ -163,13 +163,13 @@ evaluate:
 package:
   cmd: python -m spacy run package
   script:
-    - python -m spacy package  training/model-best packages  --name core_cltk_sm  --version
+    - python -m spacy package  training/model-best packages  --name dep_cltk_sm  --version
       0.2.0 --meta data/meta.json --force
   deps:
     - path: training/model-best
       md5: 153ae2b61115e0b49ed13e2932e0ee8f
   outs:
-    - path: packages/la_core_cltk_sm-0.2.0/dist/en_core_cltk_sm-0.2.0.tar.gz
+    - path: packages/la_dep_cltk_sm-0.2.0/dist/en_dep_cltk_sm-0.2.0.tar.gz
       md5: null
   spacy_version: 3.4.2
   spacy_git_version: 3d0e89536
@@ -244,7 +244,7 @@ document:
   deps: []
   outs:
     - path: README.md
-      md5: 8c1905bd50305e3f5ff5347fa2cc7f9e
+      md5: ec81260e6d27c1468cd779003c8436d3
   spacy_version: 3.4.2
   spacy_git_version: 3d0e89536
 clean:
@@ -253,6 +253,7 @@ clean:
     - sh -c "rm -rf assets/*"
     - sh -c "rm -rf corpus/*"
     - sh -c "rm -rf metrics/*"
+    - sh -c "rm -rf training/*"
   deps: []
   outs: []
   spacy_version: 3.4.2

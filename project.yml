@@ -1,4 +1,4 @@
-title: "la_core_cltk_sm"
+title: "la_dep_cltk_sm"
 description: >
   Code required to train spaCy-compatible sm model for Latin. Latin pipeline with POS tagger, morphologizer, 
   lemmatizer, and dependency parser trained on all available Latin UD treebanks, i.e. Perseus, PROIEL, ITTB, 
@@ -11,7 +11,7 @@ description: >
 vars:
   config: "config"
   lang: "la"
-  package_name: "core_cltk_sm"
+  package_name: "dep_cltk_sm"
   package_version: "0.2.0"
   gpu: -1
   treebank_pers: "UD_Latin-Perseus"
