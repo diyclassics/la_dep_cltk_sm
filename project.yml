@@ -1,0 +1,330 @@
+title: "la_core_cltk_sm"
+description: >
+  Code required to train spaCy-compatible sm model for Latin. Latin pipeline with POS tagger, morphologizer, 
+  lemmatizer, and dependency parser trained on all available Latin UD treebanks, i.e. Perseus, PROIEL, ITTB, 
+  UDante, and LLCT (see below). This project is based on the spaCy tagger_parser_ud project template with the 
+  following modifications: 1. uses Latin language-specific spaCy module; 2. combines multiple treebanks for 
+  train, dev, and test sets; 3. uses a custom Latin senter sentence segmenter; and 4. normalizes u/v and i/j 
+  in lemmas as a pretraining step (beta!).
+
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  config: "config"
+  lang: "la"
+  package_name: "core_cltk_sm"
+  package_version: "0.2.0"
+  gpu: -1
+  treebank_pers: "UD_Latin-Perseus"
+  treebank_proi: "UD_Latin-PROIEL"
+  treebank_ittb: "UD_Latin-ITTB"
+  treebank_llct: "UD_Latin-LLCT"
+  treebank_udan: "UD_Latin-UDante"
+  treebank_pers_data: "la_perseus-ud"
+  treebank_proi_data: "la_proiel-ud"
+  treebank_ittb_data: "la_ittb-ud"
+  treebank_llct_data: "la_llct-ud"
+  treebank_udan_data: "la_udante-ud"        
+  
+
+spacy_version: ">=3.4.2,<3.5.0"
+
+check_requirements: true
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "corpus", "training", "configs", "metrics", "packages"]
+
+assets:
+  - dest: "assets/${vars.treebank_pers}"
+    git:
+      repo: "https://github.com/UniversalDependencies/${vars.treebank_pers}"
+      branch: "master"
+      path: ""
+  - dest: "assets/${vars.treebank_proi}"
+    git:
+      repo: "https://github.com/UniversalDependencies/${vars.treebank_proi}"
+      branch: "master"
+      path: ""
+  - dest: "assets/${vars.treebank_ittb}"
+    git:
+      repo: "https://github.com/UniversalDependencies/${vars.treebank_ittb}"
+      branch: "master"
+      path: ""
+  - dest: "assets/${vars.treebank_llct}"
+    git:
+      repo: "https://github.com/UniversalDependencies/${vars.treebank_llct}"
+      branch: "master"
+      path: ""
+  - dest: "assets/${vars.treebank_udan}"
+    git:
+      repo: "https://github.com/UniversalDependencies/${vars.treebank_udan}"
+      branch: "master"
+      path: ""
+
+workflows:
+  all:
+    - assets
+    - preprocess
+    - normalize
+    # - train
+    - evaluate
+    - package
+    - document
+    - clean
+
+commands:
+  - name: assets
+    help: "Download assets"
+    script:
+      - python -m pip install https://huggingface.co/diyclassics/la_senter/resolve/main/la_senter-0.1.0/dist/la_senter-0.1.0.tar.gz
+      - python -m spacy project assets
+
+  - name: preprocess
+    help: "Convert the data to spaCy's format"
+    script:
+      - "mkdir -p corpus/train"
+      - "mkdir -p corpus/dev"
+      - "mkdir -p corpus/test"
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_pers}/${vars.treebank_pers_data}-train.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_pers}/${vars.treebank_pers_data}-test.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_proi}/${vars.treebank_proi_data}-train.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_proi}/${vars.treebank_proi_data}-dev.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_proi}/${vars.treebank_proi_data}-test.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_ittb}/${vars.treebank_ittb_data}-train.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_ittb}/${vars.treebank_ittb_data}-dev.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_ittb}/${vars.treebank_ittb_data}-test.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_llct}/${vars.treebank_llct_data}-train.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_llct}/${vars.treebank_llct_data}-dev.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_llct}/${vars.treebank_llct_data}-test.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_udan}/${vars.treebank_udan_data}-train.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_udan}/${vars.treebank_udan_data}-dev.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank_udan}/${vars.treebank_udan_data}-test.conllu 
+        corpus/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - sh -c 'mv corpus/*train.spacy corpus/train/'
+      - sh -c 'mv corpus/*dev.spacy corpus/dev/'
+      - sh -c 'mv corpus/*test.spacy corpus/test/'
+    deps:
+      - "assets/${vars.treebank_pers}/${vars.treebank_pers_data}-train.conllu"
+      - "assets/${vars.treebank_pers}/${vars.treebank_pers_data}-test.conllu"
+      - "assets/${vars.treebank_proi}/${vars.treebank_proi_data}-train.conllu"
+      - "assets/${vars.treebank_proi}/${vars.treebank_proi_data}-dev.conllu"
+      - "assets/${vars.treebank_proi}/${vars.treebank_proi_data}-test.conllu"
+      - "assets/${vars.treebank_ittb}/${vars.treebank_ittb_data}-train.conllu"
+      - "assets/${vars.treebank_ittb}/${vars.treebank_ittb_data}-dev.conllu"
+      - "assets/${vars.treebank_ittb}/${vars.treebank_ittb_data}-test.conllu"
+      - "assets/${vars.treebank_llct}/${vars.treebank_llct_data}-train.conllu"
+      - "assets/${vars.treebank_llct}/${vars.treebank_llct_data}-dev.conllu"
+      - "assets/${vars.treebank_llct}/${vars.treebank_llct_data}-test.conllu"
+      - "assets/${vars.treebank_udan}/${vars.treebank_udan_data}-train.conllu"
+      - "assets/${vars.treebank_udan}/${vars.treebank_udan_data}-dev.conllu"
+      - "assets/${vars.treebank_udan}/${vars.treebank_udan_data}-test.conllu"
+    outputs:
+      - "corpus/train/${vars.treebank_pers_data}-train.spacy"
+      - "corpus/train/${vars.treebank_proi_data}-train.spacy"      
+      - "corpus/train/${vars.treebank_ittb_data}-train.spacy"      
+      - "corpus/train/${vars.treebank_llct_data}-train.spacy"
+      - "corpus/train/${vars.treebank_udan_data}-train.spacy"
+      - "corpus/dev/${vars.treebank_proi_data}-dev.spacy"
+      - "corpus/dev/${vars.treebank_ittb_data}-dev.spacy"
+      - "corpus/dev/${vars.treebank_llct_data}-dev.spacy"
+      - "corpus/dev/${vars.treebank_udan_data}-dev.spacy"
+      - "corpus/test/${vars.treebank_pers_data}-test.spacy"
+      - "corpus/test/${vars.treebank_proi_data}-test.spacy"
+      - "corpus/test/${vars.treebank_ittb_data}-test.spacy"
+      - "corpus/test/${vars.treebank_llct_data}-test.spacy"
+      - "corpus/test/${vars.treebank_udan_data}-test.spacy"
+
+  - name: normalize
+    help: "U/V and I/J normalization before training, spec. for lemmatizer"
+    script:
+      - "python scripts/la_lemma_norm.py"
+    deps:
+      - "corpus/train/${vars.treebank_pers_data}-train.spacy"
+      - "corpus/train/${vars.treebank_proi_data}-train.spacy"      
+      - "corpus/train/${vars.treebank_ittb_data}-train.spacy"      
+      - "corpus/train/${vars.treebank_llct_data}-train.spacy"
+      - "corpus/train/${vars.treebank_udan_data}-train.spacy"
+      - "corpus/dev/${vars.treebank_proi_data}-dev.spacy"
+      - "corpus/dev/${vars.treebank_ittb_data}-dev.spacy"
+      - "corpus/dev/${vars.treebank_llct_data}-dev.spacy"
+      - "corpus/dev/${vars.treebank_udan_data}-dev.spacy"
+      - "corpus/test/${vars.treebank_pers_data}-test.spacy"
+      - "corpus/test/${vars.treebank_proi_data}-test.spacy"
+      - "corpus/test/${vars.treebank_ittb_data}-test.spacy"
+      - "corpus/test/${vars.treebank_llct_data}-test.spacy"
+      - "corpus/test/${vars.treebank_udan_data}-test.spacy"  
+    outputs:
+      - "corpus/train/${vars.treebank_pers_data}-train.spacy"
+      - "corpus/train/${vars.treebank_proi_data}-train.spacy"      
+      - "corpus/train/${vars.treebank_ittb_data}-train.spacy"      
+      - "corpus/train/${vars.treebank_llct_data}-train.spacy"
+      - "corpus/train/${vars.treebank_udan_data}-train.spacy"
+      - "corpus/dev/${vars.treebank_proi_data}-dev.spacy"
+      - "corpus/dev/${vars.treebank_ittb_data}-dev.spacy"
+      - "corpus/dev/${vars.treebank_llct_data}-dev.spacy"
+      - "corpus/dev/${vars.treebank_udan_data}-dev.spacy"
+      - "corpus/test/${vars.treebank_pers_data}-test.spacy"
+      - "corpus/test/${vars.treebank_proi_data}-test.spacy"
+      - "corpus/test/${vars.treebank_ittb_data}-test.spacy"
+      - "corpus/test/${vars.treebank_llct_data}-test.spacy"
+      - "corpus/test/${vars.treebank_udan_data}-test.spacy"    
+
+  - name: train
+    help: "Train tagger/pagger on Latin UD treebanks"
+    script:
+      - >-
+        python -m spacy train 
+        configs/${vars.config}.cfg
+        --output training
+        --gpu-id ${vars.gpu} 
+        --paths.train corpus/train
+        --paths.dev corpus/dev
+        --nlp.lang=${vars.lang}
+    deps:
+      - "corpus/train/la_perseus-ud-train.spacy"
+      - "corpus/train/la_proiel-ud-train.spacy"
+      - "corpus/train/la_ittb-ud-train.spacy"
+      - "corpus/train/la_llct-ud-train.spacy"
+      - "corpus/train/la_udante-ud-train.spacy"
+      - "corpus/dev/la_proiel-ud-dev.spacy"
+      - "corpus/dev/la_ittb-ud-dev.spacy"
+      - "corpus/dev/la_llct-ud-dev.spacy"
+      - "corpus/dev/la_udante-ud-dev.spacy"
+      - "corpus/test/la_perseus-ud-test.spacy"
+      - "corpus/test/la_proiel-ud-test.spacy"
+      - "corpus/test/la_ittb-ud-test.spacy"
+      - "corpus/test/la_llct-ud-test.spacy"
+      - "corpus/test/la_udante-ud-test.spacy"
+      - "configs/${vars.config}.cfg"
+    outputs:
+      - "training/model-best"
+
+  - name: evaluate
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      - >-
+        python -m spacy evaluate 
+        ./training/model-best 
+        ./corpus/test/
+        --output ./metrics/${vars.lang}_${vars.package_name}_${vars.package_version}.json 
+        --gpu-id ${vars.gpu}
+    deps:
+      - "training/model-best"
+      - "corpus/test/"
+    outputs:
+      - "metrics/{vars.package_name}-{vars.package_version}.json"
+
+  - name: package
+    help: "Package the trained model so it can be installed"
+    script:
+      - >-
+        python -m spacy package 
+        training/model-best packages 
+        --name ${vars.package_name} 
+        --version ${vars.package_version}
+        --meta data/meta.json
+        --force
+    deps:
+      - "training/model-best"
+    outputs_no_cache:
+      - "packages/${vars.lang}_${vars.package_name}-${vars.package_version}/dist/en_${vars.package_name}-${vars.package_version}.tar.gz"
+
+  - name: document
+    help: "Document ${vars.package_name}"
+    script:
+      - >-
+        python -m spacy project document 
+        --output README.md
+    outputs:
+      - "README.md"
+
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - sh -c "rm -rf assets/*"
+      - sh -c "rm -rf corpus/*"
+      - sh -c "rm -rf metrics/*"
+      - sh -c "rm -rf training/*"
