@@ -60,6 +60,11 @@ in the project directory.
 - To install the current version...
     - `pip install https://huggingface.co/diyclassics/la_dep_cltk_sm/resolve/main/la_dep_cltk_sm-0.2.0/dist/la_dep_cltk_sm-0.2.0.tar.gz`
 
+## Model repository
+
+- The model itself can be found here:
+    - https://huggingface.co/diyclassics/la_dep_cltk_sm
+
 ## Current version
 
 | Feature | Description |
